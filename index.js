@@ -12,7 +12,6 @@ app.use(cors())
 app.use(express.json())
 
 
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.4plofch.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -31,6 +30,15 @@ async function run() {
 
     const serviceCollection = client.db('martialDB').collection('services')
 
+    // JWT
+    app.post('/tokens', async (req, res) => {
+        const user = req.body;
+        const token = jwt.sign(user, process.env.JWT_TOKEN, { expiresIn: "300d" })
+        res.send({ token })
+    })
+
+
+    // SERVICES
     app.get('/services', async(req, res) => {
         const result = await serviceCollection.find().toArray()
         res.send(result)
