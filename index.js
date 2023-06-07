@@ -30,6 +30,7 @@ async function run() {
 
         const serviceCollection = client.db('martialDB').collection('services')
         const userCollection = client.db('martialDB').collection('users')
+        const instructorCollection = client.db('martialDB').collection('instructors')
 
         // JWT
         app.post('/tokens', async (req, res) => {
@@ -54,6 +55,12 @@ async function run() {
         // SERVICES
         app.get('/services', async (req, res) => {
             const result = await serviceCollection.find().toArray()
+            res.send(result)
+        })
+
+        // INSTRUCTOR
+        app.get('/instructors', async(req, res) => {
+            const result = await instructorCollection.find().toArray()
             res.send(result)
         })
 
