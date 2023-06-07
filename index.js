@@ -16,41 +16,54 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    }
 });
 
 async function run() {
-  try {
-    // Connect the client to the server	(optional starting in v4.7)
-    client.connect();
+    try {
+        // Connect the client to the server	(optional starting in v4.7)
+        client.connect();
 
-    const serviceCollection = client.db('martialDB').collection('services')
+        const serviceCollection = client.db('martialDB').collection('services')
+        const userCollection = client.db('martialDB').collection('users')
 
-    // JWT
-    app.post('/tokens', async (req, res) => {
-        const user = req.body;
-        const token = jwt.sign(user, process.env.JWT_TOKEN, { expiresIn: "300d" })
-        res.send({ token })
-    })
+        // JWT
+        app.post('/tokens', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.JWT_TOKEN, { expiresIn: "300d" })
+            res.send({ token })
+        })
 
 
-    // SERVICES
-    app.get('/services', async(req, res) => {
-        const result = await serviceCollection.find().toArray()
-        res.send(result)
-    })
+        // USERS
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const query = { email: user.email };
+            const existingUser = await userCollection.findOne(query);
+            if (existingUser) {
+                return res.send({ message: 'user already exists' })
+            }
+            const result = await userCollection.insertOne(user);
+            res.send(result)
+        })
 
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-  }
+        // SERVICES
+        app.get('/services', async (req, res) => {
+            const result = await serviceCollection.find().toArray()
+            res.send(result)
+        })
+
+        // Send a ping to confirm a successful connection
+        await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    } finally {
+        // Ensures that the client will close when you finish/error
+        // await client.close();
+    }
 }
 run().catch(console.dir);
 
