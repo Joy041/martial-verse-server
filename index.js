@@ -56,8 +56,21 @@ async function run() {
         })
 
 
+        // VERIFY ADMIN
+        const verifyAdmin = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email }
+            const user = await userCollection.findOne(query)
+
+            if (user?.role !== 'admin') {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            next()
+        }
+
+
         // USERS
-        app.get('/users', verifyJwt, async(req, res) => {
+        app.get('/users', verifyJwt, verifyAdmin,  async (req, res) => {
             const result = await userCollection.find().toArray()
             res.send(result)
         })
@@ -109,13 +122,13 @@ async function run() {
         })
 
         // INSTRUCTOR
-        app.get('/instructors', async(req, res) => {
+        app.get('/instructors', async (req, res) => {
             const result = await instructorCollection.find().toArray()
             res.send(result)
         })
 
         // REVIEWS
-        app.get('/reviews', async(req, res) => {
+        app.get('/reviews', async (req, res) => {
             const result = await reviewCollection.find().toArray()
             res.send(result)
         })
