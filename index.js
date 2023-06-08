@@ -147,6 +147,18 @@ async function run() {
             res.send(result)
         })
 
+        app.patch('/services/approved/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    status: 'approved'
+                }
+            }
+            const result = await serviceCollection.updateOne(query, updateDoc);
+            res.send(result)
+        })
+
         // REVIEWS
         app.get('/reviews', async (req, res) => {
             const result = await reviewCollection.find().toArray()
