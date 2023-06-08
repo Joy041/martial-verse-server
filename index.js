@@ -1,10 +1,9 @@
 const express = require('express');
 const app = express();
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-require('dotenv').config()
-const jwt = require('jsonwebtoken');
-// const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY);
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+require('dotenv').config()
+// const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 
@@ -26,7 +25,7 @@ const verifyJwt = (req, res, next) => {
     });
 }
 
-
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.4plofch.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -69,7 +68,7 @@ async function run() {
 
 
         // USERS
-        app.get('/users', verifyJwt, verifyAdmin,  async (req, res) => {
+        app.get('/users',  async (req, res) => {
             const result = await userCollection.find().toArray()
             res.send(result)
         })
@@ -153,6 +152,18 @@ async function run() {
             const updateDoc = {
                 $set: {
                     status: 'approved'
+                }
+            }
+            const result = await serviceCollection.updateOne(query, updateDoc);
+            res.send(result)
+        })
+
+        app.patch('/services/denied/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    status: 'denied'
                 }
             }
             const result = await serviceCollection.updateOne(query, updateDoc);
