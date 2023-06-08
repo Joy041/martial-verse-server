@@ -45,7 +45,6 @@ async function run() {
 
         const serviceCollection = client.db('martialDB').collection('services')
         const userCollection = client.db('martialDB').collection('users')
-        const instructorCollection = client.db('martialDB').collection('instructors')
         const reviewCollection = client.db('martialDB').collection('reviews')
 
         // JWT
@@ -86,6 +85,20 @@ async function run() {
             const query = { email: email }
             const user = await userCollection.findOne(query)
             const result = { admin: user?.role === 'admin' }
+            res.send(result)
+        })
+
+
+        app.get('/users/instructor/:email', verifyJwt, async (req, res) => {
+            const email = req.params.email;
+
+            if (req.decoded.email !== email) {
+                res.send({ admin: false })
+            }
+
+            const query = { email: email }
+            const user = await userCollection.findOne(query)
+            const result = { admin: user?.role === 'instructor' }
             res.send(result)
         })
 
@@ -131,12 +144,6 @@ async function run() {
         // SERVICES
         app.get('/services', async (req, res) => {
             const result = await serviceCollection.find().toArray()
-            res.send(result)
-        })
-
-        // INSTRUCTOR
-        app.get('/instructors', async (req, res) => {
-            const result = await instructorCollection.find().toArray()
             res.send(result)
         })
 
