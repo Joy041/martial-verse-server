@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const jwt = require('jsonwebtoken');
 // const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY);
@@ -42,6 +42,12 @@ async function run() {
 
 
         // USERS
+        app.get('/users', async(req, res) => {
+            const result = await userCollection.find().toArray()
+            res.send(result)
+        })
+
+
         app.post('/users', async (req, res) => {
             const user = req.body;
             const query = { email: user.email };
@@ -53,8 +59,16 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/users', async(req, res) => {
-            const result = await userCollection.find().toArray()
+
+        app.patch('/users/admin/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    role: 'admin'
+                }
+            }
+            const result = await userCollection.updateOne(query, updateDoc);
             res.send(result)
         })
 
