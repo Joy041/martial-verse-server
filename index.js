@@ -229,7 +229,11 @@ async function run() {
             const payment = req.body;
             const paymentResult = await paymentCollection.insertOne(payment)
 
-            res.send(paymentResult)
+            const query = {_id: {$in: payment.selectItem.map(id => new ObjectId(id))}}
+
+            const deleteResult = await selectClassCollection.deleteMany(query)
+
+            res.send({paymentResult, deleteResult})
         })
 
         // Send a ping to confirm a successful connection
