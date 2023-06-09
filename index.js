@@ -45,6 +45,7 @@ async function run() {
         const serviceCollection = client.db('martialDB').collection('services')
         const userCollection = client.db('martialDB').collection('users')
         const reviewCollection = client.db('martialDB').collection('reviews')
+        const selectClassCollection = client.db('martialDB').collection('selectClasses')
 
         // JWT
         app.post('/tokens', async (req, res) => {
@@ -169,6 +170,15 @@ async function run() {
             const result = await serviceCollection.updateOne(query, updateDoc);
             res.send(result)
         })
+
+
+        // SELECT CLASSES
+        app.post('/selectclass', async(req, res) => {
+            const item = req.body;
+            const result = await selectClassCollection.insertOne(item)
+            res.send(result)
+        })
+
 
         // REVIEWS
         app.get('/reviews', async (req, res) => {
