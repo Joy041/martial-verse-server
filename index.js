@@ -69,6 +69,18 @@ async function run() {
             next()
         }
 
+        // VERIFY INSTRUCTOR
+        const verifyInstructor = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email }
+            const user = await userCollection.findOne(query)
+
+            if (user?.role !== 'instructor') {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            next()
+        }
+
 
         // USERS
         app.get('/users', async (req, res) => {
@@ -149,6 +161,27 @@ async function run() {
             res.send(result)
         })
 
+        app.post('/services', verifyJwt, verifyInstructor,  async(req, res) => {
+            const item = req.body;
+            const result = await serviceCollection.insertOne(item)
+            res.send(result)
+        })
+
+        app.patch('/services/feedback/:id', verifyJwt, verifyAdmin, async(req, res) => {
+            const {feedback} = req.body;
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)}
+            const updateDoc = {
+                $set: {
+                    feedback: feedback
+                }
+            }
+            const result = await serviceCollection.updateOne(query, updateDoc)
+            res.send(result)
+        })
+
+        
+
         app.patch('/services/approved/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -209,7 +242,7 @@ async function run() {
         })
 
         // CREATE PAYMENT
-        app.post('/create-payment', verifyJwt,  async (req, res) => {
+        app.post('/create-payment', verifyJwt, async (req, res) => {
             const { price } = req.body;
 
             const amount = parseInt(price * 100);
@@ -225,16 +258,34 @@ async function run() {
         })
 
         // PAYMENT
-        app.post('/payment', async(req, res) => {
+        app.get('/payments', verifyJwt, async (req, res) => {
+            const email = req.query.email;
+
+            if (!email) {
+                res.send([]);
+            }
+
+            const options = {
+                sort: { 'date': -1 }
+            }
+
+            const query = { email: email }
+            const result = await paymentCollection.find(query, options).toArray()
+            res.send(result)
+        })
+
+
+        app.post('/payments', verifyJwt, async (req, res) => {
             const payment = req.body;
             const paymentResult = await paymentCollection.insertOne(payment)
 
-            const query = {_id: {$in: payment.selectItem.map(id => new ObjectId(id))}}
+            const query = { _id: { $in: payment.selectItem.map(id => new ObjectId(id)) } }
 
             const deleteResult = await selectClassCollection.deleteMany(query)
 
-            res.send({paymentResult, deleteResult})
+            res.send({ paymentResult, deleteResult })
         })
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
