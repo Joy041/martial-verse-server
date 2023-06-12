@@ -89,7 +89,7 @@ async function run() {
         })
 
 
-        app.get('/users/admin/:email', verifyJwt, async (req, res) => {
+        app.get('/users/admin/:email', verifyJwt,  async (req, res) => {
             const email = req.params.email;
 
             if (req.decoded.email !== email) {
@@ -103,16 +103,29 @@ async function run() {
         })
 
 
-        app.get('/users/instructor/:email', verifyJwt, async (req, res) => {
+        app.get('/users/instructor/:email', verifyJwt,  async (req, res) => {
             const email = req.params.email;
 
             if (req.decoded.email !== email) {
-                res.send({ admin: false })
+                res.send({ instructor: false })
             }
 
             const query = { email: email }
             const user = await userCollection.findOne(query)
             const result = { admin: user?.role === 'instructor' }
+            res.send(result)
+        })
+
+        app.get('/users/student/:email', verifyJwt, async (req, res) => {
+            const email = req.params.email;
+
+            if (req.decoded.email !== email) {
+                res.send({ student: false })
+            }
+
+            const query = { email: email }
+            const user = await userCollection.findOne(query)
+            const result = { admin: user?.role === 'student' }
             res.send(result)
         })
 
@@ -160,9 +173,34 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/popular', async(req, res) => {
+            const item = req.body
+            const optionDoc = {
+                sort: {
+                    'booking': -1
+                }
+            }
+            const result = await serviceCollection.find( item ,optionDoc).toArray()
+            res.send(result)
+        })
+
         app.post('/services', verifyJwt, verifyInstructor,  async(req, res) => {
             const item = req.body;
             const result = await serviceCollection.insertOne(item)
+            res.send(result)
+        })
+
+        app.patch('/services/booking/:id', async(req, res) => {
+            const {seat, book} = req.body;
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)}
+            const updateDoc = {
+                $set: {
+                    seats: seat,
+                    booking: book
+                }
+            }
+            const result = await serviceCollection.updateMany(query, updateDoc)
             res.send(result)
         })
 
@@ -275,12 +313,13 @@ async function run() {
         app.post('/payments', verifyJwt, async (req, res) => {
             const payment = req.body;
             const paymentResult = await paymentCollection.insertOne(payment)
+            const id = req.body.selectItem;
 
-            const query = { _id: { $in: payment.selectItem.map(id => new ObjectId(id)) } }
+            const query = { _id:  new ObjectId(id) }
 
             const deleteResult = await selectClassCollection.deleteMany(query)
 
-            res.send({ paymentResult, deleteResult })
+            res.send( {paymentResult, deleteResult} )
         })
 
 
