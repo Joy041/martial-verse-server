@@ -117,7 +117,6 @@ async function run() {
         })
 
 
-
         app.post('/users', async (req, res) => {
             const user = req.body;
             const query = { email: user.email };
@@ -130,7 +129,7 @@ async function run() {
         })
 
 
-        app.patch('/users/admin/:id', async (req, res) => {
+        app.patch('/users/admin/:id', verifyJwt, verifyAdmin,  async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const updateDoc = {
@@ -143,7 +142,7 @@ async function run() {
         })
 
 
-        app.patch('/users/instructor/:id', async (req, res) => {
+        app.patch('/users/instructor/:id', verifyJwt, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const updateDoc = {
@@ -180,9 +179,7 @@ async function run() {
             res.send(result)
         })
 
-        
-
-        app.patch('/services/approved/:id', async (req, res) => {
+        app.patch('/services/approved/:id', verifyJwt, verifyAdmin,  async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const updateDoc = {
@@ -194,7 +191,7 @@ async function run() {
             res.send(result)
         })
 
-        app.patch('/services/denied/:id', async (req, res) => {
+        app.patch('/services/denied/:id', verifyJwt, verifyAdmin,  async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const updateDoc = {
@@ -221,13 +218,13 @@ async function run() {
         })
 
 
-        app.post('/selected', async (req, res) => {
+        app.post('/selected', verifyJwt,  async (req, res) => {
             const item = req.body;
             const result = await selectClassCollection.insertOne(item)
             res.send(result)
         })
 
-        app.delete('/selected/:id', async (req, res) => {
+        app.delete('/selected/:id', verifyJwt, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await selectClassCollection.deleteOne(query)
